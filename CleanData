@@ -1,0 +1,68 @@
+import numpy as np
+import pandas as pd
+from sklearn import preprocessing
+import seaborn as sns
+
+import matplotlib.pyplot as plt
+%matplotlib inline 
+
+############################################ Lecture des fichiers ######################################
+##################################### Préparation et analyse des données ###############################
+
+mobilisation = pd.read_csv("LFB Mobilisation data Last 3 years.csv", header=0, sep=";");
+incident = pd.read_csv("LFB Incident data Last 3 years.csv", header=0, sep=";");
+
+total = pd.merge(incident, mobilisation, on='IncidentNumber')
+
+total.head()
+#total.info()
+#total.describe()
+
+######### Test de corrélation ##########
+plt.figure(figsize=(16, 15))
+#total.corr()
+sns.heatmap(total.corr(), annot=True, cmap='RdBu_r', center=0);
+
+######## Suppression des colonnes inutile pour l'analyse ##########
+total.drop(["Postcode_full","IncGeo_BoroughCode","ProperCase","IncGeo_WardCode","IncGeo_WardName","Easting_m",
+           "Northing_m","Easting_rounded","Northing_rounded","Latitude","Longitude","FRS","IncidentStationGround",
+           "FirstPumpArriving_AttendanceTime","FirstPumpArriving_DeployedFromStation","SecondPumpArriving_AttendanceTime",
+           "SecondPumpArriving_DeployedFromStation","NumStationsWithPumpsAttending","NumPumpsAttending","PumpHoursRoundUp",
+           "Notional Cost (£)","CalYear_y","HourOfCall_y","DateAndTimeMobilised","DateAndTimeMobile","DateAndTimeArrived",
+           "DateAndTimeReturned","DelayCodeId","DelayCode_Description"], axis=1, inplace=True)
+
+total.head()
+#total.info()
+#total.describe()
+
+######### Test des lignes dupliquées ##########
+#total.duplicated().sum()
+
+######### Test des lignes et colonnes qui contiennent des NANs ##########
+#colonnes_na = total.isna().any(axis = 0)
+#print(colonnes_na.sum(), "colonnes de total contiennent des NANs. \n")
+
+#lignes_na = total.isna().any(axis = 1)
+#print(lignes_na.sum(), "lignes de total contiennent des NANs. \n")
+
+#colonnes_nbna = total.isna().sum(axis = 0)
+#print("La colonne contenant le plus de NANs est:", colonnes_nbna.idxmax())
+
+######### Suppression des NANs ##########
+#total = total.dropna()
+
+######### Conversion des colonnes Date de type Object en type Date ##########
+#total['DateOfCall'] = pd.to_datetime(total['DateOfCall'])
+#total['DateAndTimeLeft'] = pd.to_datetime(total['DateAndTimeLef'])
+
+#total.info();
+
+######### Test de corrélation ##########
+#plt.figure(figsize=(16, 15))
+#sns.heatmap(total.corr(), annot=True, cmap='RdBu_r', center=0);
+# On peut voir la forte corrélation entre les 2 variables "TravelTimeSeconds" et "AttendanceTimeSeconds" 
+# ce qui permet de définir la variable "AttendanceTimeSeconds" comme cible
+
+############ Pré-processing - Standardisation des données ###########
+#scaler = preprocessing.StandardScaler().fit(total)
+#total[total.columns] = pd.DataFrame(scaler.transform(total), index=total.index)
