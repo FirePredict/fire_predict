@@ -44,8 +44,8 @@
  43  DateAndTimeMobilised                    587073 non-null  object  Delete
  44  DateAndTimeMobile                       583270 non-null  object  Delete
  45  DateAndTimeArrived                      587073 non-null  object  Delete
- 46  TurnoutTimeSeconds                      583264 non-null  float64 Delete ? temps de sortie du vehicule
- 47  TravelTimeSeconds                       583190 non-null  float64 Delete ? temps de trajet
+ 46  TurnoutTimeSeconds                      583264 non-null  float64 Delete ( redondant avec AttendanceTimeSeconds ) temps de sortie du vehicule
+ 47  TravelTimeSeconds                       583190 non-null  float64 Delete ( redondant avec AttendanceTimeSeconds ) temps de trajet
  48  AttendanceTimeSeconds                   587073 non-null  int64   TARGET ( temps d'attente )
  49  DateAndTimeLeft                         586816 non-null  object  ?
  50  DateAndTimeReturned                     0 non-null       float64  Delete
