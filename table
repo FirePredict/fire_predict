@@ -14,7 +14,7 @@
  13  UPRN                                    587073 non-null  object  Delete
  14  USRN                                    587073 non-null  int64   Delete
  15  IncGeo_BoroughCode                      587073 non-null  object  Delete ( preference pour le nom )
- 16  IncGeo_BoroughName                      587073 non-null  object  OK Nom en majuscule quartier ( 33 )
+ 16  IncGeo_BoroughName                      587073 non-null  object  OK Nom en majuscule District ( 33 )
  17  ProperCase                              587073 non-null  object  Delete ( identique IncGeo_BoroughName )
  18  IncGeo_WardCode                         587072 non-null  object  Delete ( preference pour le nom )
  19  IncGeo_WardName                         587072 non-null  object  Delete ( on garde le IncGeo_WardNameNew )
