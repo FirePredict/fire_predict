@@ -51,7 +51,7 @@
  50  DateAndTimeReturned                     0 non-null       float64  Delete
  51  DeployedFromStation_Code                587060 non-null  object Delete ( Redondant avec resource_code )
  52  DeployedFromStation_Name                587060 non-null  object ( a garder pour info sans apprentissage )
- 53  DeployedFromLocation                    586737 non-null  object OK ( deployé depuis la caserne ou ailleurs )
+ 53  DeployedFromLocation                    586737 non-null  object OK ( deployé depuis la caserne ou ailleurs ) 336 NAN
  54  PumpOrder                               587073 non-null  int64  Delete
  55  PlusCode_Code                           587073 non-null  object  Delete ( toujours Initial )
  56  PlusCode_Description                    587073 non-null  object  Delete ( toujours Initial Mobilisation )
