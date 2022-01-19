@@ -58,14 +58,14 @@ total.head()
 ######### Conversion des colonnes Date de type Object en type Date ##########
 total['DateOfCall'] = pd.to_datetime(total['DateOfCall'])
 
-total.info();
+#total.info();
 #total.head()
 
 ######### Création de la colonne 'Jour' de la semaine à partir de 'DateOfCall' ##########
 
-# A faire
+total['dayOfWeek'] = total['DateOfCall'].dt.dayofweek
 
-total.head()
+#total.head()
 
 ######### Convertir les tables 'object' en table numerique ##########
 
