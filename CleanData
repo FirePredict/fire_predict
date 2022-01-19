@@ -24,12 +24,15 @@ plt.figure(figsize=(16, 15))
 sns.heatmap(total.corr(), annot=True, cmap='RdBu_r', center=0);
 
 ######## Suppression des colonnes inutile pour l'analyse ##########
-total.drop(["IncidentGroup","PropertyCategory","Postcode_full","UPRN","USRN","IncGeo_BoroughCode","ProperCase","IncGeo_WardCode","IncGeo_WardName","Easting_m",
-           "Northing_m","Easting_rounded","Northing_rounded","Latitude","Longitude","FRS","IncidentStationGround",
-           "FirstPumpArriving_AttendanceTime","FirstPumpArriving_DeployedFromStation","SecondPumpArriving_AttendanceTime",
-           "SecondPumpArriving_DeployedFromStation","NumStationsWithPumpsAttending","NumPumpsAttending","PumpCount","PumpHoursRoundUp",
-           "Notional Cost (£)","CalYear_y","HourOfCall_y","ResourceMobilisationId","PerformanceReporting","DateAndTimeMobilised","DateAndTimeMobile","DateAndTimeArrived",
-           "TurnoutTimeSeconds","TravelTimeSeconds","DateAndTimeLeft","DateAndTimeReturned","DeployedFromStation_Code","PumpOrder","PlusCode_Code","PlusCode_Description","DelayCodeId","DelayCode_Description"], axis=1, inplace=True)
+total.drop(["IncidentGroup","PropertyCategory","Postcode_full","UPRN","USRN","IncGeo_BoroughCode","ProperCase",
+           "IncGeo_WardCode","IncGeo_WardName","Easting_m","Northing_m","Easting_rounded","Northing_rounded",
+           "Latitude","Longitude","FRS","IncidentStationGround","FirstPumpArriving_AttendanceTime",
+           "FirstPumpArriving_DeployedFromStation","SecondPumpArriving_AttendanceTime",
+           "SecondPumpArriving_DeployedFromStation","NumStationsWithPumpsAttending","NumPumpsAttending",
+           "PumpCount","PumpHoursRoundUp","Notional Cost (£)","CalYear_y","HourOfCall_y","ResourceMobilisationId",
+           "PerformanceReporting","DateAndTimeMobilised","DateAndTimeMobile","DateAndTimeArrived","TurnoutTimeSeconds",
+           "TravelTimeSeconds","DateAndTimeLeft","DateAndTimeReturned","DeployedFromStation_Code","PumpOrder",
+           "PlusCode_Code","PlusCode_Description","DelayCodeId","DelayCode_Description"], axis=1, inplace=True)
 
 total.head()
 
