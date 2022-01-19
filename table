@@ -1,7 +1,7 @@
  0   IncidentNumber                          587073 non-null  object  OK
  1   DateOfCall                              587073 non-null  object  -> datetime ( 01 Jan 2018 )
- 2   CalYear_x                               587073 non-null  int64   OK 
- 3   TimeOfCall                              587073 non-null  object  -> datetime ( 04:12:25 )
+ 2   CalYear_x                               587073 non-null  int64   OK ?
+ 3   TimeOfCall                              587073 non-null  object  OK
  4   HourOfCall_x                            587073 non-null  int64   OK
  5   IncidentGroup                           587073 non-null  object  Delete ( redondant avec StopCodeDescription )
  6   StopCodeDescription                     587073 non-null  object  Delete apres traitement des Nan suivant ( plus detaillé que IncidentGroup )
@@ -57,3 +57,27 @@
  56  PlusCode_Description                    587073 non-null  object  Delete ( toujours Initial Mobilisation )
  57  DelayCodeId                             130554 non-null  float64  Delete
  58  DelayCode_Description                   130554 non-null  object   Delete
+ 
+ 
+ 
+ Table DEST :
+ 
+  #   Column                    Non-Null Count   Dtype         
+---  ------                    --------------   -----         
+ 0   IncidentNumber            586735 non-null  object        
+ 1   DateOfCall                586735 non-null  datetime64[ns]
+ 2   CalYear_x                 586735 non-null  int64         
+ 3   TimeOfCall                586735 non-null  object        
+ 4   HourOfCall_x              586735 non-null  int64         
+ 5   SpecialServiceType        586735 non-null  object        
+ 6   PropertyType              586735 non-null  object        
+ 7   AddressQualifier          586735 non-null  object        
+ 8   Postcode_district         586735 non-null  object        
+ 9   IncGeo_BoroughName        586735 non-null  object        
+ 10  IncGeo_WardNameNew        586735 non-null  object        
+ 11  Resource_Code             586735 non-null  object        
+ 12  AttendanceTimeSeconds     586735 non-null  int64         
+ 13  DeployedFromStation_Name  586735 non-null  object        
+ 14  DeployedFromLocation      586735 non-null  object  
+ 
+ 
