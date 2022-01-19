@@ -70,16 +70,7 @@ total['dayOfWeek'] = total['DateOfCall'].dt.dayofweek
 ######### Convertir les tables 'object' en table numerique ##########
 
 # A faire
-
-SpecialServiceType       
-PropertyType       
-AddressQualifier      
-Postcode_district        
-IncGeo_BoroughName      
-IncGeo_WardNameNew      
-Resource_Code  
-DeployedFromStation_Name       
-DeployedFromLocation
+#["SpecialServiceType, "PropertyType", "AddressQualifier", "Postcode_district", "IncGeo_BoroughName", "IncGeo_WardNameNew", "Resource_Code", "DeployedFromLocation"]
 
 total.head()
 
