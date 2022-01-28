@@ -107,3 +107,77 @@ total.head()
 ############ Pré-processing - Standardisation des données ###########
 #scaler = preprocessing.StandardScaler().fit(total)
 #total[total.columns] = pd.DataFrame(scaler.transform(total), index=total.index)
+
+####################################################################################
+####################################################################################
+####################################################################################
+
+################### Nombre d'intervention par type d'incident ####################
+plt.figure(figsize=(15,16))
+chart = sns.countplot(x='SpecialServiceType', data=total)
+chart.set_xticklabels(chart.get_xticklabels(), rotation=90)
+plt.show()
+
+print('On constate que les fausses alertes représente un nombre important d\'incident !\nSuivis par les feux secondaires et les inondations !')
+
+################### Nombre d'intervention par arrondissement ####################
+plt.figure(figsize=(15,16))
+chart = sns.countplot(x='IncGeo_BoroughName', data=total)
+chart.set_xticklabels(chart.get_xticklabels(), rotation=90) 
+plt.show()
+print('On constate que l\'arrondissement de WESTMINSTER qui est le quartier le plus dynamique, le plus actif de Londres représente un nombre important d\'intervention!')
+
+############# Type d'incident par arrondissement ###############
+chart = sns.relplot(x='IncGeo_BoroughName', y='SpecialServiceType', height=12, ci=None, kind='line', data=total)
+plt.xticks(rotation=90)
+plt.show()
+
+print('On peut constater que les incidents de l\'arrondissement de WESTMINSTER et CITY OF LONDON sont essentiellement des feux primaires et secondaires !')
+print('On peut conclure sur le fait que les délais d\'interventions dans ces arrondissement peuvent être plus élevés en moyenne')
+print('Ceux-ci sont trés dépendant du traffic routier et de l\'activité en journée et donc des heures dans la journée !')
+print('De plus de part ce type d\'incident il est nécéssaire de déplacer des véhicules lourds !')
+
+############# Délai d'intervention par arrondissement ###############
+plt.figure(figsize=(15,16))
+sns.barplot(y=total['IncGeo_BoroughName'], x=total['AttendanceTimeSeconds'], color='red', orient='h');
+print('On constate que l\'arrondissemnt d\'Hillingdon, qui se situe à L\'Ouest de Londres, représente le lieu ou les délais d\'intervention sont les plus longs!\nEt l\'arrondissement de Lambeth qui se situe en centre ville de Londres représente les délais les plus courts!')
+print('Comme sur le graphe précédent on a observé que les incidents majeurs dans l\'arrondissement d\' Hillingdon était plutôt des fausses alertes')
+print('On peut peut dire que les délais d\'interventions dans cet arrondissement sont liés plus à la distance de la plus proche caserne sur Londres que sur le type de véhicule à déplacer !')
+print('Alors que pour l\'arrondissement de Lambeth on a observer que les incidents majeurs sont des feux mais la situation')
+print('en centre ville proche des casernes permet de se rendre les lieux rapidement même en déplacant des véhicules lourds !')
+
+############# Délai d'intervention en fonction du type d'incident ###############
+chart = sns.relplot(x='SpecialServiceType', y='AttendanceTimeSeconds', height=12, ci=None, kind='line', data=total)
+plt.xticks(rotation=90)
+plt.show()
+print('On constate que le type d\'incident \'Approvisionnement en Eau\' représente l\'indicent où les délais d\'interventiuon sont les plus longs!\'nPar contre le type d\'incident \'Enlèvement d\'objet aux personnes\' représente l\'incident où les délais sont les plus courts!')
+print('On peut voir aussi que les incidents de type médicaux représente un délai d\'interventions relativement cours\nPar contre on constate que les délais se rallonge nettement lorsqu\'il s\'agit d\'incident de type Feu ou ascenceur bloqué!')
+print('On peut conclure que les incidents où il est nécéssaire de faire intervenir des véhicules lourds avec du matériel importants\ncomme les camions citernes qui doivent intervenir sur des départs de feu ou les camions d\'approvisionnment en eau peuvent avoir des délais d\'interventions plus longs !')
+
+############# Délai d'intervention en fonction de l'heure dans la journée ###############
+sns.relplot(x='HourOfCall_x', y='AttendanceTimeSeconds', kind='line', data=total)
+
+print('On peut voir que les délais d\'interventions sont rallongé en début de matinée et en fin de journée probablement à cause du nombre de véicule important à ces heures là.')
+print('Cela est corrélé avec les départs le matin pour les personnes qui travaillent et les sorties de bureau en fin d\'aprés-midi !')
+
+############# Délai d'intervention en fonction de l'heure dans la journée et par jour dans la semaine ###############
+
+sns.relplot(x='HourOfCall_x', y='AttendanceTimeSeconds', kind='line', ci=None, hue='dayOfWeek', data=total)
+print('On peut observer que pour tous les jours de la semaine la tendance reste la même sauf pour le weekend où les délais semblent être plus courts !')
+
+################### Visuel sur les valeurs extrêmes et concentration des données ##############
+
+sns.catplot(x='dayOfWeek', y='AttendanceTimeSeconds', kind='violin', data=total);
+print('On observe un comportement similaire en fonction des jours de la semaine !')
+print('Donc on peut conclure que les caractéristiques qui influent sur les délais d\'interventions sont semblables pour chaque jour de la semaine!')
+
+############### Vue par quartier ################
+g = sns.FacetGrid(total, row='IncGeo_BoroughName')
+g.map(plt.scatter, 'dayOfWeek', 'AttendanceTimeSeconds', s=5, alpha=.5, color='red')
+
+print('En observant tous ces graphes à ce stade on peut conlure en disant que le délais d\'intervention dépend :')
+print('De la distance du lieu de l\'incident par rapport aux casernes les plus proches.')
+print('Du type d\'incident qui va déplacer des véhicules plus ou moins chargés donc plus lourds.')
+print('De l\'heure de l\'incident dans la journée')
+print('qui va impliqué le traffic routier et l\'activité du lieu où se trouve l\'incident.')
+
