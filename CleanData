@@ -70,6 +70,12 @@ total['dayOfWeek'] = total['DateOfCall'].dt.dayofweek
 
 #total.head()
 
+######### Création de la colonne 'month' à partir de 'DateOfCall' ##########
+
+total['month'] = total['DateOfCall'].dt.month
+
+#total.head()
+
 ######### Convertir les tables 'object' en table numerique ##########
 
 # A faire
