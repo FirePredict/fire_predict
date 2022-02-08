@@ -1,0 +1,139 @@
+from sklearn import model_selection, preprocessing
+
+from sklearn.model_selection import cross_val_predict, cross_val_score, cross_validate, train_test_split
+from sklearn.linear_model import LinearRegression, LassoCV, Lasso
+from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.linear_model import lasso_path
+import matplotlib.cm as cm
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+############################################ Lecture des fichiers ######################################
+##################################### Préparation et analyse des données ###############################
+
+mobilisation = pd.read_csv("LFB Mobilisation data Last 3 years.csv", header=0, sep=";");
+incident = pd.read_csv("LFB Incident data Last 3 years.csv", header=0, sep=";");
+
+total = pd.merge(incident, mobilisation, on='IncidentNumber')
+
+total.drop(["IncidentGroup","PropertyCategory","Postcode_full","UPRN","USRN","IncGeo_BoroughCode","ProperCase",
+           "IncGeo_WardCode","IncGeo_WardName","Easting_m","Northing_m","Easting_rounded","Northing_rounded",
+           "Latitude","Longitude","FRS","IncidentStationGround","FirstPumpArriving_AttendanceTime",
+           "FirstPumpArriving_DeployedFromStation","SecondPumpArriving_AttendanceTime",
+           "SecondPumpArriving_DeployedFromStation","NumStationsWithPumpsAttending","NumPumpsAttending",
+           "PumpCount","PumpHoursRoundUp","Notional Cost (£)","CalYear_y","HourOfCall_y","ResourceMobilisationId",
+           "PerformanceReporting","DateAndTimeMobilised","DateAndTimeMobile","DateAndTimeArrived","TurnoutTimeSeconds",
+           "TravelTimeSeconds","DateAndTimeLeft","DateAndTimeReturned","DeployedFromStation_Code","PumpOrder",
+           "PlusCode_Code","PlusCode_Description","DelayCodeId","DelayCode_Description"], axis=1, inplace=True)
+
+total['SpecialServiceType']=total['SpecialServiceType'].fillna(total['StopCodeDescription'])
+total.drop(['StopCodeDescription'], axis=1, inplace=True)
+
+total = total.dropna() 
+
+total['DateOfCall'] = pd.to_datetime(total['DateOfCall'])
+total['dayOfWeek'] = total['DateOfCall'].dt.dayofweek
+total['month'] = total['DateOfCall'].dt.month
+
+# Suppression de la colonne Numéro d'incident
+# Cette information est purement indicatrice et 
+# ne rentre pas en compte dans l'apprentissage du modèle
+total = total.drop('IncidentNumber',axis=1)
+
+# Transformation du type de la colonne Date de l'appel en type Object
+# pour la compatibilité du modèle
+total['DateOfCall'] = total['DateOfCall'].astype(object)
+
+# Liste des colonnes catégorielles
+objColumn = list(total.select_dtypes(include=['object']).columns)
+
+# Transformation des variables catégorielles en variables indicatrices 
+# pour la compatibilité avec le modèle d'apprentissage
+enc = OrdinalEncoder()
+enc.fit(total[objColumn])
+total[objColumn] = enc.transform(total[objColumn])
+
+# Centrer et réduire les variables numériques ????
+total[total.columns] = pd.DataFrame(preprocessing.StandardScaler().fit_transform(total))
+
+# Suppression des lignes qui contiennent des NaNs car incompatible avec le modèle de régression
+colonnes_totalna = total.isna().sum(axis = 0)
+print(colonnes_totalna)
+
+total = total.dropna(axis=0)
+colonnes_totalna = total.isna().sum(axis = 0)
+print(colonnes_totalna)
+
+# Séparation de la variable cible du reste des autres variables
+data = total.drop('AttendanceTimeSeconds', axis=1)
+target = total.AttendanceTimeSeconds
+
+# Séparation des données en un ensemble d'apprentissage et un ensemble de Test 
+# avec 20% des données originales pour le Test
+X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.2, random_state=789)
+
+lasso_r = Lasso(alpha=1)
+
+lasso_r.fit(X_train, y_train)
+
+print(lasso_r.coef_)
+
+lasso_reg = Lasso(alpha=0.1)
+
+lasso_reg.fit(X_train, y_train)
+
+lasso_coef = lasso_reg.coef_
+
+plt.plot(range(len(data.columns)), lasso_coef)
+plt.xticks(range(len(data.columns)), data.columns.values, rotation=70);
+
+print('score train :', lasso_reg.score(X_train, y_train))
+print('score test :', lasso_reg.score(X_test, y_test))
+
+lasso_pred_train = lasso_reg.predict(X_train)
+lasso_pred_test = lasso_reg.predict(X_test)
+
+print('mse train :', mean_squared_error(lasso_pred_train, y_train))
+print('mse test :', mean_squared_error(lasso_pred_test, y_test))
+
+mes_alphas = (0.001, 0.01, 0.02, 0.025, 0.05, 0.1, 0.25, 0.5, 0.8, 1.0)
+
+alpha_path, coefs_lasso, _ = lasso_path(X_train, y_train, alphas=mes_alphas)
+
+coefs_lasso.shape
+
+plt.figure(figsize=(10, 7))
+
+for i in range(coefs_lasso.shape[0]):
+    plt.plot(alpha_path, coefs_lasso[i,:], '--')
+
+plt.xlabel('Alpha')
+plt.ylabel('Coefficients')
+plt.title('Lasso path');
+
+model_lasso = LassoCV(cv=10).fit(X_train, y_train)
+
+alphas = model_lasso.alphas_
+
+plt.figure(figsize=(10, 8))
+
+plt.plot(alphas, model_lasso.mse_path_, ':')
+plt.plot(alphas, model_lasso.mse_path_.mean(axis=1), 'k', label='Moyenne', linewidth=2)
+
+plt.axvline(model_lasso.alpha_, linestyle='--', color='k', label='alpha : estimation CV')
+
+plt.xlabel('Alpha')
+plt.ylabel('Mean square error')
+plt.title('Mean square error pour chaque échantillon')
+plt.legend();
+
+pred_test = model_lasso.predict(X_test)
+
+print('score test :', model_lasso.score(X_test, y_test))
+print('mse test :', mean_squared_error(pred_test, y_test))
