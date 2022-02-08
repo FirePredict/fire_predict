@@ -1,0 +1,98 @@
+from sklearn import model_selection, preprocessing
+
+from sklearn.model_selection import cross_val_predict, cross_val_score, cross_validate, train_test_split
+from sklearn.linear_model import LinearRegression, LassoCV, RidgeCV
+from sklearn.metrics import mean_squared_error
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+
+import matplotlib.pyplot as plt
+%matplotlib inline 
+
+############################################ Lecture des fichiers ######################################
+##################################### Préparation et analyse des données ###############################
+
+mobilisation = pd.read_csv("LFB Mobilisation data Last 3 years.csv", header=0, sep=";");
+incident = pd.read_csv("LFB Incident data Last 3 years.csv", header=0, sep=";");
+
+total = pd.merge(incident, mobilisation, on='IncidentNumber')
+
+total.drop(["IncidentGroup","PropertyCategory","Postcode_full","UPRN","USRN","IncGeo_BoroughCode","ProperCase",
+           "IncGeo_WardCode","IncGeo_WardName","Easting_m","Northing_m","Easting_rounded","Northing_rounded",
+           "Latitude","Longitude","FRS","IncidentStationGround","FirstPumpArriving_AttendanceTime",
+           "FirstPumpArriving_DeployedFromStation","SecondPumpArriving_AttendanceTime",
+           "SecondPumpArriving_DeployedFromStation","NumStationsWithPumpsAttending","NumPumpsAttending",
+           "PumpCount","PumpHoursRoundUp","Notional Cost (£)","CalYear_y","HourOfCall_y","ResourceMobilisationId",
+           "PerformanceReporting","DateAndTimeMobilised","DateAndTimeMobile","DateAndTimeArrived","TurnoutTimeSeconds",
+           "TravelTimeSeconds","DateAndTimeLeft","DateAndTimeReturned","DeployedFromStation_Code","PumpOrder",
+           "PlusCode_Code","PlusCode_Description","DelayCodeId","DelayCode_Description"], axis=1, inplace=True)
+
+total['SpecialServiceType']=total['SpecialServiceType'].fillna(total['StopCodeDescription'])
+total.drop(['StopCodeDescription'], axis=1, inplace=True)
+
+total = total.dropna() 
+
+total['DateOfCall'] = pd.to_datetime(total['DateOfCall'])
+total['dayOfWeek'] = total['DateOfCall'].dt.dayofweek
+
+# Suppression de la colonne Numéro d'incident
+# Cette information est purement indicatrice et 
+# ne rentre pas en compte dans l'apprentissage du modèle
+total = total.drop('IncidentNumber',axis=1)
+
+# Transformation du type de la colonne Date de l'appel en type Object
+# pour la compatibilité du modèle
+total['DateOfCall'] = total['DateOfCall'].astype(object)
+
+# Liste des colonnes catégorielles
+objColumn = list(total.select_dtypes(include=['object']).columns)
+
+# Transformation des variables catégorielles en variables indicatrices 
+# pour la compatibilité avec le modèle d'apprentissage
+enc = OrdinalEncoder()
+enc.fit(total[objColumn])
+total[objColumn] = enc.transform(total[objColumn])
+
+# Centrer et réduire les variables numériques ????
+scaler = preprocessing.StandardScaler().fit(total)
+total[total.columns] = pd.DataFrame(scaler.transform(total))
+
+# Suppression des lignes qui contiennent des NaNs car incompatible avec le modèle de régression
+colonnes_totalna = total.isna().sum(axis = 0)
+print(colonnes_totalna)
+#modal = total['Alley'].mode()
+#total['Alley'] = total['Alley'].fillna(modal[0])
+#colonnes_totalna = total.isna().sum(axis = 0)
+#print(colonnes_totalna)
+total = total.dropna(axis=0)
+colonnes_totalna = total.isna().sum(axis = 0)
+print(colonnes_totalna)
+
+# Séparation de la variable cible du reste des autres variables
+data = total.drop('AttendanceTimeSeconds', axis=1)
+target = total.AttendanceTimeSeconds
+
+# Séparation des données en un ensemble d'apprentissage et un ensemble de Test 
+# avec 20% des données originales pour le Test
+X_train, X_test, y_train, y_test = train_test_split(data, target, test_size=0.2, random_state=101)
+
+# Affichage de la heatmap des coorélations entre chaque colonne de total
+plt.figure(figsize=(15, 14))
+sns.heatmap(total.corr(), annot=True, cmap='RdBu_r', center=0);
+
+# Création d'un modèle de régression linéaire simple pour expliquer le délai en fonction de la variable SpecialServiceType
+# à partir de l'ensemble d'entrainement
+linearModel = LinearRegression()
+linearModel.fit(X_train[['SpecialServiceType']], y_train)
+
+# Affchage du score R² et RMSE du modèle sur l'échantillon d'entrainement puis sur celui du test
+print('score train :', linearModel.score(X_train[['SpecialServiceType']], y_train))
+print('score test :', linearModel.score(X_test[['SpecialServiceType']], y_test))
+
+pred = linearModel.predict(X_train[['SpecialServiceType']])
+pred_test = linearModel.predict(X_test[['SpecialServiceType']])
+
+print('rmse train :', np.sqrt(mean_squared_error(y_train, pred)))
+print('rmse test :', np.sqrt(mean_squared_error(y_test, pred_test)))
