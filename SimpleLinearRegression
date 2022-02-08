@@ -36,6 +36,7 @@ total = total.dropna()
 
 total['DateOfCall'] = pd.to_datetime(total['DateOfCall'])
 total['dayOfWeek'] = total['DateOfCall'].dt.dayofweek
+total['month'] = total['DateOfCall'].dt.month
 
 # Suppression de la colonne Numéro d'incident
 # Cette information est purement indicatrice et 
