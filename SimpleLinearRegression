@@ -64,10 +64,7 @@ total[total.columns] = pd.DataFrame(scaler.transform(total))
 # Suppression des lignes qui contiennent des NaNs car incompatible avec le modèle de régression
 colonnes_totalna = total.isna().sum(axis = 0)
 print(colonnes_totalna)
-#modal = total['Alley'].mode()
-#total['Alley'] = total['Alley'].fillna(modal[0])
-#colonnes_totalna = total.isna().sum(axis = 0)
-#print(colonnes_totalna)
+
 total = total.dropna(axis=0)
 colonnes_totalna = total.isna().sum(axis = 0)
 print(colonnes_totalna)
