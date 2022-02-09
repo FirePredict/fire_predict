@@ -45,6 +45,9 @@ total['month'] = total['DateOfCall'].dt.month
 # Cette information est purement indicatrice et 
 # ne rentre pas en compte dans l'apprentissage du modèle
 total = total.drop('IncidentNumber',axis=1)
+total = total.drop('TimeOfCall',axis=1)
+total = total.drop('Postcode_district',axis=1)
+total = total.drop('IncGeo_WardNameNew',axis=1)
 
 # Transformation du type de la colonne Date de l'appel en type Object
 # pour la compatibilité du modèle
@@ -60,7 +63,7 @@ enc.fit(total[objColumn])
 total[objColumn] = enc.transform(total[objColumn])
 
 # Centrer et réduire les variables numériques ????
-total[total.columns] = pd.DataFrame(preprocessing.StandardScaler().fit_transform(total))
+#total[total.columns] = pd.DataFrame(preprocessing.StandardScaler().fit_transform(total))
 
 # Suppression des lignes qui contiennent des NaNs car incompatible avec le modèle de régression
 colonnes_totalna = total.isna().sum(axis = 0)
@@ -82,7 +85,7 @@ lasso_r = Lasso(alpha=1)
 
 lasso_r.fit(X_train, y_train)
 
-print(lasso_r.coef_)
+print('Coefficient Lasso :',lasso_r.coef_)
 
 lasso_reg = Lasso(alpha=0.1)
 
