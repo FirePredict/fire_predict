@@ -1,0 +1,139 @@
+
+import numpy as np
+import pandas as pd
+from sklearn import preprocessing
+import seaborn as sns
+
+import matplotlib.pyplot as plt
+%matplotlib inline 
+
+############################################ Lecture des fichiers ######################################
+##################################### Préparation et analyse des données ###############################
+
+mobilisation = pd.read_csv("LFB Mobilisation data Last 3 years.csv", header=0, sep=";");
+incident = pd.read_csv("LFB Incident data Last 3 years.csv", header=0, sep=";");
+
+total = pd.merge(incident, mobilisation, on='IncidentNumber')
+
+#total.head()
+#total.info()
+#total.describe()
+
+######### Test de corrélation ##########
+plt.figure(figsize=(16, 15))
+#total.corr()
+sns.heatmap(total.corr(), annot=True, cmap='RdBu_r', center=0);
+
+
+######## Suppression des colonnes inutile pour l'analyse ##########
+total.drop(["IncidentGroup","PropertyCategory","Postcode_full","UPRN","USRN","IncGeo_BoroughCode","ProperCase",
+           "IncGeo_WardCode","IncGeo_WardName","Easting_m","Northing_m","Easting_rounded","Northing_rounded",
+           "Latitude","Longitude","FRS","IncidentStationGround","FirstPumpArriving_AttendanceTime",
+           "FirstPumpArriving_DeployedFromStation","SecondPumpArriving_AttendanceTime",
+           "SecondPumpArriving_DeployedFromStation","NumStationsWithPumpsAttending","NumPumpsAttending",
+           "PumpCount","PumpHoursRoundUp","Notional Cost (£)","CalYear_y","HourOfCall_y","ResourceMobilisationId",
+           "PerformanceReporting","DateAndTimeMobilised","DateAndTimeMobile","DateAndTimeArrived","TurnoutTimeSeconds",
+           "TravelTimeSeconds","DateAndTimeLeft","DateAndTimeReturned","DeployedFromStation_Code","PumpOrder",
+           "PlusCode_Code","PlusCode_Description","DelayCodeId","DelayCode_Description"], axis=1, inplace=True)
+
+
+######## verification des Nan ########
+total.isna().sum()
+#SpecialServiceType          461656
+#IncGeo_WardNameNew               1
+#DeployedFromStation_Name        13
+#DeployedFromLocation           336
+
+total['SpecialServiceType']=total['SpecialServiceType'].fillna(total['StopCodeDescription'])
+total.drop(['StopCodeDescription'], axis=1, inplace=True)
+
+######### Suppression des NANs ##########
+total = total.dropna()           # 338 lignes sur 587073 ( negligeable )
+
+#total.head()
+#total.info()
+#total.describe()
+
+######### Test des lignes dupliquées ##########
+#total.duplicated().sum()
+
+######### Conversion des colonnes Date de type Object en type Date ##########
+total['DateOfCall'] = pd.to_datetime(total['DateOfCall'])
+
+#total.info();
+#total.head()
+
+######### Création de la colonne 'dayOfWeek' de la semaine à partir de 'DateOfCall' ##########
+
+total['dayOfWeek'] = total['DateOfCall'].dt.dayofweek
+total['month'] = total['DateOfCall'].dt.month
+
+################### Nombre d'intervention par type d'incident ####################
+plt.figure(figsize=(15,16))
+chart = sns.countplot(x='SpecialServiceType',data=total, order = total['SpecialServiceType'].value_counts().index)
+chart.set_xticklabels(chart.get_xticklabels(), rotation=90)
+plt.xlabel("Type d'intervention")
+plt.ylabel("Nombre d'intervention")
+plt.show()
+
+
+########### Nombre d'intervention par type d'incident sans fausse alarme ##############
+totalnotfa = total.loc[total["SpecialServiceType"] != "AFA"]
+totalnotfa = totalnotfa.loc[totalnotfa["SpecialServiceType"] != "False alarm - Good intent"]
+plt.figure(figsize=(15,16))
+chart = sns.countplot(x='SpecialServiceType', data=totalnotfa, order = totalnotfa['SpecialServiceType'].value_counts().index)
+chart.set_xticklabels(chart.get_xticklabels(), rotation=90)
+plt.xlabel("Type d'intervention")
+plt.ylabel("Nombre d'intervention")
+plt.show()
+
+################### Nombre d'intervention par arrondissement ####################
+plt.figure(figsize=(15,16))
+chart = sns.countplot(x='IncGeo_BoroughName', data=total, order = total['IncGeo_BoroughName'].value_counts().index)
+chart.set_xticklabels(chart.get_xticklabels(), rotation=90) 
+plt.xlabel("Nom du district")
+plt.ylabel("Nombre d'intervention")
+plt.show()
+
+############# Délai d'intervention par arrondissement ###############
+plt.figure(figsize=(15,16))
+chart=sns.barplot(y=total['IncGeo_BoroughName'], x=total['AttendanceTimeSeconds'], color='red', orient='h');
+plt.xlabel("Temps d'attente (s)")
+plt.ylabel("Nom du district")
+plt.show()
+
+############# Délai d'intervention en fonction du type d'incident ###############
+plt.figure(figsize=(8,8))
+chart = sns.barplot(x='SpecialServiceType', y='AttendanceTimeSeconds', data=total)
+plt.xticks(rotation=90)
+plt.xlabel("Type d'intervention")
+plt.ylabel("Temps d'attente (s)")
+plt.show()
+
+############# Délai d'intervention en fonction de l'heure dans la journée et par jour dans la semaine ###############
+plt.figure(figsize=(15,16))
+chart=sns.relplot(x='HourOfCall_x', y='AttendanceTimeSeconds',ci=None, height=14, kind='line', hue='dayOfWeek', data=total, facet_kws={'legend_out': True})
+plt.xlabel("Heure de la journée")
+plt.ylabel("Temps d'attente moyen (s)")
+plt.legend(title='Jour', loc='upper right', labels=['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'])
+plt.show()
+
+############# Délai d'intervention en fonction de l'heure dans la journée et par jour dans la semaine ###############
+plt.figure(figsize=(15,16))
+chart=sns.relplot(x='month', y='AttendanceTimeSeconds',ci=None, height=14, kind='line', hue = 'CalYear_x', data=total, facet_kws={'legend_out': True})
+plt.xlabel("Mois")
+plt.ylabel("Temps d'attente moyen (s)")
+plt.legend(title='Année')
+plt.show()
+
+############# Délai d'intervention en fonction de l'heure dans la journée et par jour dans la semaine ###############
+plt.figure(figsize=(15,16))
+chart=sns.countplot(x='month', data=total, hue='CalYear_x')
+plt.xlabel("Mois")
+plt.ylabel("Nombre d'intervention")
+plt.legend(title='Année')
+plt.show()
+
+################### Visuel sur les valeurs extrêmes et concentration des données ##############
+plt.figure(figsize=(15,16));
+sns.catplot(x='dayOfWeek', y='AttendanceTimeSeconds', kind='violin', height=14, data=total);
