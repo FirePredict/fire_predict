@@ -1,0 +1,88 @@
+#librairies de base
+import pandas as pd
+import numpy as np
+
+# import xgboost
+import xgboost as xgb
+
+#visualisations
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+#préprocessing ML
+from sklearn.preprocessing import StandardScaler
+
+#modèle de ML
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+# Lecture des fichiers csv
+mobilisation = pd.read_csv("LFB Mobilisation data Last 3 years.csv", header=0, sep=";")
+incident = pd.read_csv("LFB Incident data Last 3 years.csv", header=0, sep=";")
+
+# concaténation des fichiers csv dans un dataframe total
+total = pd.merge(incident, mobilisation, on='IncidentNumber')
+
+total.info()
+
+# contrôle des Nans
+total.isna().sum()
+
+# suppression des Nan car peu nombreux
+total = total.dropna(axis = 1)
+
+# Création d'une colonne minute pour faire une prédiction à la minute
+total['minute'] = total['AttendanceTimeSeconds']/60
+total['minute'] =  total['minute'].astype('int64', copy=False)
+
+# separation des variables indicatrices et des variables qualitative
+numerical_cols = [contname for contname in total.columns if total[contname].dtype in ['float64', 'int64']]
+total_numerical = total[numerical_cols]
+qualitative_cols = [contname for contname in total.columns if total[contname].dtype in ['object']]
+total_qualitative = total[qualitative_cols]
+
+# suppression des variables non utilisées
+total_quali = total_qualitative.drop(["IncidentNumber", "Postcode_district", "DateOfCall", "TimeOfCall", "UPRN", "FRS", "DateAndTimeMobilised", "DateAndTimeArrived", "PlusCode_Code", "PlusCode_Description"], axis = 1)
+
+# discrétisation des variables qualitative
+test = pd.get_dummies(total_quali)
+
+# concaténation des variables quantitatives et des variables qualitative discrétisés
+df = pd.concat([total_numerical, test], axis = 1)
+
+# séparation de la variable attendu et du reste du jeu de données
+y = df.minute
+X = df.drop(["AttendanceTimeSeconds", "minute"], axis = 1)
+
+# séparation du jeu de données et de test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state=101)
+
+# utilisation de XGBRegressor
+xgbr = xgb.XGBRegressor(verbosity=0) 
+
+# apprentissage
+xgbr.fit(X_train, y_train)
+
+# résultat
+score = xgbr.score(X_train, y_train)  
+print("Training score R²: ", score)
+
+scores = cross_val_score(xgbr, X_train, y_train,cv=10)
+print("Mean cross-validation score: %.2f" % scores.mean())
+
+kfold = KFold(n_splits=10, shuffle=True)
+kf_cv_scores = cross_val_score(xgbr, X_train, y_train, cv=kfold )
+print("K-fold CV average score: %.2f" % kf_cv_scores.mean())
+
+y_pred = xgbr.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+print("MSE: %.2f" % mse)
+
+print("RMSE: %.2f" % (mse**(1/2.0)))
+
+x_ax = range(len(y_test))
+plt.plot(x_ax, y_test, label="original")
+plt.plot(x_ax, y_pred, label="predicted")
+plt.title("Predicted data")
+plt.legend()
+plt.show()
