@@ -16,6 +16,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import KFold
 
 # Lecture des fichiers csv
 mobilisation = pd.read_csv("LFB Mobilisation data Last 3 years.csv", header=0, sep=";")
