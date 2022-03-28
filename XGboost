@@ -64,7 +64,7 @@ xgbr = xgb.XGBRegressor(verbosity=0)
 # apprentissage
 xgbr.fit(X_train, y_train)
 
-# résultat
+# Affichage des résultats
 score = xgbr.score(X_train, y_train)  
 print("Training score R²: ", score)
 #Training score R²:  0.4113613746125049
