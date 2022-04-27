@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from streamlit_option_menu import option_menu
 
+#st.cache(persist=True)
 st.set_page_config(layout="wide")
 with st.sidebar:
     selected = option_menu("Menu", ["Contexte", 'Analyse', 'Graphs', 'Dataframe', 'Moyenne', 'Type'], 
@@ -22,10 +23,12 @@ if selected == "Analyse":
     total.rename(columns={'CalYear_x': 'Annee'}, inplace=True)
     st.write("Temps moyen par mois par type d'alarme et par district")
     clist = total['IncGeo_BoroughName'].unique()
+    clist.sort()
     alist = total['SpecialServiceType'].unique()
-    district = st.multiselect("Select a district : ", clist, default="WESTMINSTER")
+    alist.sort()
+    district3 = st.multiselect("Select a district : ", clist, default="WESTMINSTER")
     intervention = st.multiselect("Select a intervention",alist, default="AFA")
-    query = f"IncGeo_BoroughName=={district} & SpecialServiceType=={intervention}"
+    query = f"IncGeo_BoroughName=={district3} & SpecialServiceType=={intervention}"
     df_filtered = total.query(query)
     col1, col2 = st.columns(2)
     col1.metric("Nb intervention : ",len(df_filtered))
@@ -41,7 +44,7 @@ if selected == "Analyse":
 elif selected == "Graphs":
 
     st.title("Les graphs :")
-    option = st.selectbox('Quel graph ?', ('Nb_intervention_incident','Nb_intervention_biens','Nb_intervention_district','Delai_district','Delai_incident','Delai_biens','Delai_mois_annee', 'Nb_intervention_brigade'))
+    option = st.selectbox('Quel graph ?', ('Nb_intervention_incident', 'Delai_incident', 'Nb_intervention_district','Delai_district','Delai_mois_annee', 'Nb_intervention_brigade', 'Nb_intervention_brigade_district', 'Nb_intervention_biens', 'Delai_biens', 'Intervention_date'))
     if option == "Nb_intervention_incident":
         with st.spinner("Génération du graph ...."):
             fig=px.histogram(total, x='SpecialServiceType', text_auto='.2s', height=600).update_xaxes(categoryorder='total descending')
@@ -63,6 +66,7 @@ elif selected == "Graphs":
             others=len(total)-Fal-Afa-entryexit-Flooding-Rtc-Fire        
             values = [Afa, Fal, Fire, others, Flooding, Rtc, entryexit]
             fig=px.pie(names=labels, values=values)
+            fig.update_traces(textfont_size=17)
             st.plotly_chart(fig, use_container_width=True)
             st.write("Road Traffic Collision (RTC)")
             st.write("Automatic Fire Alarms (AFA)")
@@ -79,10 +83,11 @@ elif selected == "Graphs":
             plt.xticks(rotation=90)
             st.plotly_chart(fig, use_container_width=True)
 
-    if option == "Nb_intervention_brigade":
+    if option == "Nb_intervention_brigade_district":
         clist = total['IncGeo_BoroughName'].unique()
-        district = st.selectbox("Select a district:",clist)
-        query = f"IncGeo_BoroughName=='{district}'"
+        clist.sort()
+        district1 = st.selectbox("Select a district: ",clist, index=32)
+        query = f"IncGeo_BoroughName=='{district1}'"
         df_filtered = total.query(query)
         somme=len(df_filtered['DeployedFromStation_Name'])
         temp=df_filtered['DeployedFromStation_Name'].value_counts()[:5]
@@ -93,8 +98,10 @@ elif selected == "Graphs":
         temp=temp.reset_index()
         st.write("Top 5 sur ",len(df_filtered['DeployedFromStation_Name'].unique()))
         fig=px.pie(temp, names='index', values=0)
+        #fig.update_traces(textfont_size=15)
         st.plotly_chart(fig, use_container_width=True)
-       
+      
+    if option == "Nb_intervention_brigade":      
         with st.spinner("Génération du graph ...."):
             st.write("Nombre de brigate : ", len(total['DeployedFromStation_Name'].unique()))
             fig=px.histogram(total, x="DeployedFromStation_Name",  text_auto='.2s', height=600).update_xaxes(categoryorder='total descending')
@@ -169,6 +176,19 @@ elif selected == "Graphs":
             plt.xlabel("Mois")
             plt.ylabel("Temps d'attente moyen (s)")
             st.pyplot(fig)
+
+    elif option=="Intervention_date":
+        with st.spinner("Génération du graph .."):
+            total.rename(columns={'CalYear_x': 'annee'}, inplace=True)
+            fig=px.histogram(total, x='month', color='annee', barmode='group', height=600, text_auto='.0f')
+            fig.update_layout(
+            title="Nombre d'intervention par mois et annee",
+                   yaxis=dict(title="Nombre d'interventions"),
+                   xaxis=dict(title="Mois"),
+                   bargap=0.2
+                   )
+            plt.xticks(rotation=90)
+            st.plotly_chart(fig, use_container_width=True)
         
 elif selected == "Dataframe":
     temp= pd.read_csv("1000line.csv")
@@ -177,20 +197,28 @@ elif selected == "Dataframe":
 
 elif selected == "Moyenne":
     total.rename(columns={'CalYear_x': 'Annee'}, inplace=True)
-    st.write("Temps moyen par type d'alarme, district, et type de batiment")
+    st.write("Temps moyen par type d'alarme, district, et type de bien")
     blist = total['PropertyType'].unique()
-    clist = total['IncGeo_BoroughName'].unique()
+    blist.sort()
+    dlist = total['IncGeo_BoroughName'].unique()
+    dlist.sort()
     alist = total['SpecialServiceType'].unique()
-    district = st.selectbox("Select a district:",clist)
-    intervention = st.selectbox("Select a intervention",alist)
-    endroit = st.selectbox("Select a type",blist)
-    moyenne=total.loc[(total['IncGeo_BoroughName']==district) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].mean()
+    alist.sort()
+    district0 = st.selectbox("Select a district:",dlist, index=32)
+    intervention = st.selectbox("Select a intervention",alist, index=19)
+    endroit = st.selectbox("Select a type",blist, index=202)
+    moyenne=total.loc[(total['IncGeo_BoroughName']==district0) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].mean()
     if np.isnan(moyenne):
         st.write("Pas d'intervention de ce type")
     else:
-        st.write("Moyenne : ", int(total.loc[(total['IncGeo_BoroughName']==district) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].mean()), "soit : ",int(moyenne/60)," mn et ", int(moyenne-(int(moyenne/60)*60))," secondes  /  Min : ", int(total.loc[(total['IncGeo_BoroughName']==district) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].min()),"  Max : ", int(total.loc[(total['IncGeo_BoroughName']==district) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].max()))
-        st.write("Nombre d'intervention : ", len(total.loc[(total['IncGeo_BoroughName']==district) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit)]))
-        fig=px.box(total.loc[(total['IncGeo_BoroughName']==district) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'], y='AttendanceTimeSeconds', height=800, points="all")
+        col1, col2, col3, col4, col5, col6 = st.columns(6)
+        col2.metric("Moyenne :", int(total.loc[(total['IncGeo_BoroughName']==district0) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].mean()))
+        col3.metric("En minutes :",int(moyenne/60))
+        col4.metric("et secondes :", int(moyenne-(int(moyenne/60)*60)))
+        col5.metric("Minimun : ", int(total.loc[(total['IncGeo_BoroughName']==district0) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].min()))
+        col6.metric("Maximum : ", int(total.loc[(total['IncGeo_BoroughName']==district0) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'].max()))
+        col1.metric("Nombre d'intervention : ", len(total.loc[(total['IncGeo_BoroughName']==district0) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit)]))
+        fig=px.box(total.loc[(total['IncGeo_BoroughName']==district0) & (total['SpecialServiceType']==intervention) & (total['PropertyType']==endroit),'AttendanceTimeSeconds'], y='AttendanceTimeSeconds', height=800, points="all")
         fig.update_layout(
         title="Temps d'attente en graphique",
            yaxis=dict(title="Temps d'attente (s)")
